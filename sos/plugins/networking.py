@@ -68,6 +68,31 @@ class Networking(Plugin):
                 dev_list.append(dev)
         return dev_list
 
+    def get_devlink_devs(self):
+        """Returns a list for which items are devlink devices.
+        """
+        devlink_dev_result = self.call_ext_prog("devlink dev show")
+        dev_list = []
+        if devlink_dev_result['status'] == 0:
+            for dev in devlink_dev_result['output'].splitlines():
+                dev_list.append(dev)
+        return dev_list
+
+    def get_devlink_tables(self, devlink_tables_file):
+        """Returns a list for which items are devlink tables.
+        """
+        out = []
+        try:
+            devlink_tables_out = open(devlink_tables_file).read()
+        except IOError:
+            return out
+        for line in devlink_tables_out.splitlines():
+            # match only lines where table name is specified
+            match = re.match('\s*name\s+(\w+)', line)
+            if match:
+                out.append(match.group(1))
+        return out
+
     def collect_iptable(self, tablename):
         """ When running the iptables command, it unfortunately auto-loads
         the modules before trying to get output.  Some people explicitly
@@ -208,6 +233,25 @@ class Networking(Plugin):
             "bridge -s -s -d -t mdb show",
             "bridge -d vlan show"
         ])
+
+        # check if devlink module loaded and if yes, capture additional
+        # data from devlink command
+        if self.is_module_loaded("devlink"):
+            self.add_cmd_output("devlink dev show")
+            self.add_cmd_output("devlink port show")
+            self.add_cmd_output("devlink sb show")
+            self.add_cmd_output("devlink sb pool show")
+            self.add_cmd_output("devlink sb port pool show")
+            self.add_cmd_output("devlink sb tc bind show")
+            self.add_cmd_output("devlink region show")
+            self.add_cmd_output("devlink dev param show")
+            for dev in self.get_devlink_devs():
+                self.add_cmd_output("devlink -v resource show %s" % dev)
+                self.add_cmd_output("devlink dpipe header show %s" % dev)
+                devlink_table_file = self.get_cmd_output_now("devlink dpipe table show %s" % dev)
+                if devlink_table_file:
+                    for table in self.get_devlink_tables(devlink_table_file):
+                        self.add_cmd_output("devlink dpipe table dump %s name %s" % (dev, table))
 
         if self.get_option("traceroute"):
             self.add_cmd_output("/bin/traceroute -n %s" % self.trace_host)
