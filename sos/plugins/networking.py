@@ -321,7 +321,8 @@ class UbuntuNetworking(Networking, UbuntuPlugin, DebianPlugin):
             "/run/netplan/*.yaml",
             "/etc/netplan/*.yaml",
             "/lib/netplan/*.yaml",
-            "/run/systemd/network"
+            "/run/systemd/network",
+            "/etc/rc.local"    
         ])
         self.add_cmd_output([
             "/usr/sbin/ufw status",
