@@ -156,6 +156,7 @@ class Networking(Plugin):
             "netstat -s",
             "netstat %s -agn" % self.ns_wide,
             "ss -peaonmi",
+            "ip vrf",
             "ip route show table all",
             "ip -6 route show table all",
             "ip -4 rule",
