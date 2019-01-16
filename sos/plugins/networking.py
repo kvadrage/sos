@@ -190,6 +190,7 @@ class Networking(Plugin):
                     "ethtool "+eth,
                     "ethtool -d "+eth,
                     "ethtool -i "+eth,
+                    "ethtool -m "+eth,
                     "ethtool -k "+eth,
                     "ethtool -S "+eth,
                     "ethtool -T "+eth,
